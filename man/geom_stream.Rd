@@ -16,6 +16,8 @@ geom_stream(
   na.rm = T,
   bw = 0.75,
   n_grid = 3000,
+  method = c("loess", "density", "raw"),
+  center_fun = NULL,
   ...
 )
 }
@@ -38,6 +40,10 @@ geom_stream(
 
 \item{n_grid}{number of x points that should be calculated. The higher the more smooth plot.}
 
+\item{method}{Which method of estimation should be used. Default is LOESS, similar to `geom_smooth` but sets negative values to zero.}
+
+\item{center_fun}{a function that returns the y center for each possible x in range of x.}
+
 \item{...}{other arguments to be passed to the geom}
 }
 \value{
@@ -47,4 +53,21 @@ a data frame
 geom_stream
 
 stat to compute `geom_stream`
+}
+\examples{
+
+library(ggplot2)
+set.seed(123)
+ df <- data.frame(x = rep(1:40, 3),
+                  y = rpois(120, 2),
+                  group = sort(rep(c("A", "B", "C"), 40)))
+ggplot(df, aes(x, y, fill = group)) +
+  geom_stream(bw = .6)
+
+ggplot(df, aes(x, y, fill = group)) +
+  geom_stream(method = "raw", bw = .6)
+
+ggplot(df, aes(x, y, fill = group)) +
+  geom_stream(method = "density")
+
 }

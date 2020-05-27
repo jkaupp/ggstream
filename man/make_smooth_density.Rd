@@ -4,7 +4,7 @@
 \alias{make_smooth_density}
 \title{make_smooth_density
 
-Takes points and turns them into a density line.}
+Takes points and turns them into a density line. The density curve is the multiplied with the group range in x times group mean in y.}
 \usage{
 make_smooth_density(.df, bw = bw, n_grid = n_grid, min_x, max_x)
 }
@@ -25,5 +25,5 @@ a data frame
 \description{
 make_smooth_density
 
-Takes points and turns them into a density line.
+Takes points and turns them into a density line. The density curve is the multiplied with the group range in x times group mean in y.
 }

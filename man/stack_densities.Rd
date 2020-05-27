@@ -6,7 +6,13 @@
 
 Takes density lines of equal x range and stack them on top of each other symmetrically aournd zero.}
 \usage{
-stack_densities(data, bw = bw, n_grid = n_grid)
+stack_densities(
+  data,
+  bw = bw,
+  n_grid = n_grid,
+  center_fun = center_fun,
+  method = method
+)
 }
 \arguments{
 \item{data}{a data frame}
@@ -14,6 +20,10 @@ stack_densities(data, bw = bw, n_grid = n_grid)
 \item{bw}{bandwidth of kernal density}
 
 \item{n_grid}{number of x points that should be calculated. The higher the more smooth plot.}
+
+\item{center_fun}{a function that returns the y center for each possible x in range of x.}
+
+\item{method}{which estimation should be applied. Default is LOESS.}
 }
 \value{
 a data frame

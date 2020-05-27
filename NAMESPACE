@@ -2,6 +2,8 @@
 
 export("%>%")
 export(geom_stream)
+export(make_connect_dots)
 export(make_smooth_density)
+export(make_smooth_loess)
 export(stack_densities)
 importFrom(magrittr,"%>%")
