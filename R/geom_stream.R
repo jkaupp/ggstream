@@ -2,7 +2,7 @@
 #
 # Takes points and turns them into a density line.
 #
-# @param .df a data frame that must contain x and y
+# @param df a data frame that must contain x and y
 # @param bw bandwidth of kernal density
 # @param n_grid number of x points that should be calculated. The higher the more smooth plot.
 # @param min_x minimum x value of all groups
