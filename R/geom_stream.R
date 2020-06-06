@@ -182,6 +182,8 @@ stack_densities <- function(data, bw = bw, n_grid = n_grid, center_fun = center_
 
   do.call(rbind, data)
 
+
+
 }
 
 
@@ -196,6 +198,19 @@ StatStreamDensity <- ggplot2::ggproto(
 
     .panels <- unique(data$PANEL)
 
+     saveRDS(data, "~/Desktop/mtcars_ex.RDS")
+
+    if (params$method %in% c('newWiggle', 'minimizedWiggle','themeRiver')) {
+
+      .per_panel <- lapply(
+        split(data, .panels),
+        compute_stacks,
+        method = params$method
+      )
+
+
+    } else {
+
     .per_panel <- lapply(
       split(data, .panels),
         stack_densities,
@@ -203,18 +218,25 @@ StatStreamDensity <- ggplot2::ggproto(
         n_grid = params$n_grid,
         center_fun = params$center_fun,
         method = params$method
-      )
+    )
+    }
 
     .per_panel <-
       lapply(seq_along(.per_panel), function(x) {
            data.frame(.per_panel[[x]], PANEL = .panels[x])
       })
 
-    .per_panel <- setNames(do.call(rbind, .per_panel), c("x", "y", "group", "PANEL"))
+    # unsure if this breaks other methods
+    #.per_panel <- setNames(do.call(rbind, .per_panel), c("x", "y", "group", "PANEL"))
+
+    .per_panel <- do.call(rbind, .per_panel)
 
     .per_panel$PANEL <- factor(.per_panel$PANEL)
 
-    merge(unique(data[!names(data) %in% c("x", "y")]), .per_panel, by = c("group", "PANEL"))
+    # Check to see if it breaks other methods
+    #merge(unique(data[!names(data) %in% c("x", "y")]), .per_panel, by = c("group", "PANEL"))
+
+    merge(unique(data[!names(data) %in% c("x", "y")]), .per_panel)
 
 
   },
@@ -245,7 +267,7 @@ StatStreamDensity <- ggplot2::ggproto(
 #' @export
 geom_stream <- function(mapping = NULL, data = NULL, geom = "polygon",
                         position = "identity", show.legend = NA,
-                        inherit.aes = TRUE, na.rm = T, bw = 0.75, n_grid = 3000, method = c("loess", "density", "raw"), center_fun = NULL, ...) {
+                        inherit.aes = TRUE, na.rm = T, bw = 0.75, n_grid = 3000, method = c("loess", "density", "raw", "themeRiver", "newWiggle", "minimizedWiggle"), center_fun = NULL, ...) {
   method <- match.arg(method)
   ggplot2::layer(
     stat = StatStreamDensity, data = data, mapping = mapping, geom = geom,
