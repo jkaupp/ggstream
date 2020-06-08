@@ -13,9 +13,15 @@ make_smooth_density <- function(df, bw = bw, n_grid = n_grid, min_x, max_x) {
 
   group <- df$group[1]
 
-  df <-  df[stats::complete.cases(df), ]
+  group_min_x <- min(df$x, na.rm = T)
 
-  range_dist <- diff(c(min_x, max_x))
+  group_max_x <- max(df$x, na.rm = T)
+
+  range_dist <- max_x - min_x
+
+  group_average_y <- mean(df$y, na.rm = TRUE)
+
+  df <-  df[stats::complete.cases(df), ]
 
   bwidth <- bw
 
@@ -28,12 +34,9 @@ make_smooth_density <- function(df, bw = bw, n_grid = n_grid, min_x, max_x) {
 
   df <- df[(df$x <= max_x & df$x >= min_x) | df$y > 1/10000 * max(df$y), ]
 
+  # Un-normalize density so that height matches true data relative size
 
-  # Unnormalize density so that height matches true data relative size
-
-  group_average_y <- mean(df$y)
-
-  mulitplier <- abs(range_dist) * group_average_y
+  mulitplier <- abs(group_max_x - group_min_x) * group_average_y
 
   df$y <- df$y * mulitplier
 
@@ -97,6 +100,8 @@ make_connect_dots <- function(df, n_grid = n_grid, min_x, max_x, ...){
 
   df <- unique(df[c("x", "group")])
 
+  df <- df[order(df$x),]
+
   df$y <- new_y
 
   group <- df$group[[1]]
@@ -112,23 +117,23 @@ make_connect_dots <- function(df, n_grid = n_grid, min_x, max_x, ...){
   inside_local_range <- range_x[range_x >= min(df$x) & range_x <= max(df$x)]
 
   df <- data.frame(xlag = c(NA, utils::head(df$x, -1)),
-             ylag = c(NA, utils::head(df$y, -1)),
-             x = df$x,
-             y = df$y)
+                   ylag = c(NA, utils::head(df$y, -1)),
+                   x = df$x,
+                   y = df$y)
 
   df <-  df[stats::complete.cases(df), ]
 
+  inrange <- apply(df, 1, build_range, inside_range = inside_local_range)
 
-  inrange_out <- do.call(rbind, apply(df, 1, build_range, inside_range = inside_local_range))
+  inrange_out <- do.call(rbind, inrange)
 
   out <- rbind(inrange_out,
-    data.frame(x = outside_local_range,
-             y = rep(0, length(outside_local_range))))
+               data.frame(x = outside_local_range,
+                          y = rep(0, length(outside_local_range))))
 
-   out$group <- group
+  out$group <- group
 
-   out[order(out$x),]
-
+  out[order(out$x),]
 }
 
 
@@ -183,7 +188,6 @@ stack_densities <- function(data, bw = bw, n_grid = n_grid, center_fun = center_
   do.call(rbind, data)
 
 
-
 }
 
 
@@ -219,22 +223,25 @@ StatStreamDensity <- ggplot2::ggproto(
     )
     }
 
-    .per_panel <-
-      lapply(seq_along(.per_panel), function(x) {
-           data.frame(.per_panel[[x]], PANEL = .panels[x])
-      })
+    per_panel <- do.call(rbind, per_panel)
 
-    # unsure if this breaks other methods
-    #.per_panel <- setNames(do.call(rbind, .per_panel), c("x", "y", "group", "PANEL"))
+    per_panel$PANEL <- factor(per_panel$PANEL)
 
-    .per_panel <- do.call(rbind, .per_panel)
+    chars <- unique(data[!names(data) %in% c("x", "y")])
 
-    .per_panel$PANEL <- factor(.per_panel$PANEL)
+    chars$id  <- 1:nrow(chars)
 
-    # Check to see if it breaks other methods
-    #merge(unique(data[!names(data) %in% c("x", "y")]), .per_panel, by = c("group", "PANEL"))
+    per_panel$p_id <- 1:nrow(per_panel)
 
-    merge(unique(data[!names(data) %in% c("x", "y")]), .per_panel)
+    out <- merge(chars, per_panel, by = c("group", "PANEL"), all.x = FALSE)
+
+    out <- out[order(out$id, out$p_id), ]
+
+    out <- out[!names(out) %in% c("id", "p_id")]
+
+    rownames(out) <- NULL
+
+    out
 
 
   },
