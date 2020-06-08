@@ -198,8 +198,6 @@ StatStreamDensity <- ggplot2::ggproto(
 
     .panels <- unique(data$PANEL)
 
-     saveRDS(data, "~/Desktop/mtcars_ex.RDS")
-
     if (params$method %in% c('newWiggle', 'minimizedWiggle','themeRiver')) {
 
       .per_panel <- lapply(
