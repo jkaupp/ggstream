@@ -35,3 +35,27 @@ build_range <-  function(x, inside_range) {
              y = points)
 
 }
+
+decimal_places <- function(x) {
+  if (abs(x - round(x)) > .Machine$double.eps^0.5) {
+    nchar(strsplit(sub('0+$', '', as.character(x)), ".", fixed = TRUE)[[1]][[2]])
+  } else {
+    return(0)
+  }
+}
+
+replace_values <- function(df) {
+
+  df$y <- replace(df$y, is.na(df$y), 0)
+  df$fill <- replace(df$fill, is.na(df$fill), unique(na.omit(df$fill)))
+
+  df
+
+}
+
+rename_x <- function(x) {
+
+  names(x)[names(x) == "fill"] <-  unique(as.character(x$fill))
+
+  return(x)
+}

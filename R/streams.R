@@ -131,7 +131,11 @@ minimizedWiggle <- function(values, timePoints, nStreams) {
 }
 
 
-compute_stacks <- function(df, method = 'themeRiver'){
+compute_stacks <- function(df, method = 'themeRiver') {
+
+  range_x <- range(df$x)
+
+  full_values <- data.frame(x = seq(range_x[1], range_x[2], 1/10^max(sapply(df$x, decimal_places))))
 
   others <- df[!names(df) %in% c("x", "y")]
 
@@ -139,7 +143,11 @@ compute_stacks <- function(df, method = 'themeRiver'){
 
   list <- split(sub_df, df$fill)
 
-  list <- lapply(list, function(x) setNames(x, c("fill", "x", unique(x$fill))))
+  list <- lapply(list, function(x) merge(full_values, x, by = "x", all.x = TRUE))
+
+  list <- lapply(list,  replace_values)
+
+  list <- lapply(list, function(x) setNames(x, c("x", unique(as.character(x$fill)), "fill")))
 
   list <- lapply(list, function(x) x[names(x) != "fill"])
 
@@ -158,6 +166,6 @@ compute_stacks <- function(df, method = 'themeRiver'){
                 newWiggle = newWiggle(values, timePoints, nStreams),
                 minimizedWiggle = minimizedWiggle(values, timePoints, nStreams))
 
-  merge(out, others)
+  merge(out, unique(others))
 
 }

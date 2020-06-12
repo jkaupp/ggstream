@@ -204,7 +204,7 @@ StatStreamDensity <- ggplot2::ggproto(
 
     if (params$method %in% c('newWiggle', 'minimizedWiggle','themeRiver')) {
 
-      .per_panel <- lapply(
+      per_panel <- lapply(
         split(data, .panels),
         compute_stacks,
         method = params$method
@@ -213,7 +213,7 @@ StatStreamDensity <- ggplot2::ggproto(
 
     } else {
 
-    .per_panel <- lapply(
+    per_panel <- lapply(
       split(data, .panels),
         stack_densities,
         bw = params$bw,
@@ -233,7 +233,8 @@ StatStreamDensity <- ggplot2::ggproto(
 
     per_panel$p_id <- 1:nrow(per_panel)
 
-    out <- merge(chars, per_panel, by = c("group", "PANEL"), all.x = FALSE)
+    out <- merge(chars, per_panel, all.x = FALSE)
+    #    out <- merge(chars, per_panel, by = c("group", "PANEL"), all.x = FALSE)
 
     out <- out[order(out$id, out$p_id), ]
 
@@ -265,7 +266,7 @@ StatStreamDensity <- ggplot2::ggproto(
 #' @param n_grid number of x points that should be calculated. The higher the more smooth plot.
 #' @param center_fun a function that returns the y center for each possible x in range of x.
 #' @param method Which method of estimation should be used. Default is LOESS, similar to `geom_smooth` but sets negative values to zero.
-#' @param inherit.aes should the geom inherits aestethics
+#' @param inherit.aes should the geom inherits aesthetics
 #' @param ... other arguments to be passed to the geom
 #'
 #' @return a data frame
