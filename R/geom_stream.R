@@ -2,7 +2,7 @@
 #
 # Takes points and turns them into a density line.
 #
-# @param df a data frame that must contain x and y
+# @param .df a data frame that must contain x and y
 # @param bw bandwidth of kernal density
 # @param n_grid number of x points that should be calculated. The higher the more smooth plot.
 # @param min_x minimum x value of all groups
@@ -134,6 +134,7 @@ make_connect_dots <- function(df, n_grid = n_grid, min_x, max_x, ...){
   out$group <- group
 
   out[order(out$x),]
+
 }
 
 
@@ -161,9 +162,9 @@ stack_densities <- function(data, bw = bw, n_grid = n_grid, center_fun = center_
   }
 
   fun <- switch(method,
-         density = make_smooth_density,
-         loess = make_smooth_loess,
-         raw = make_connect_dots)
+                density = make_smooth_density,
+                loess = make_smooth_loess,
+                raw = make_connect_dots)
 
   x_range <- range(data$x)
 
@@ -187,7 +188,6 @@ stack_densities <- function(data, bw = bw, n_grid = n_grid, center_fun = center_
 
   do.call(rbind, data)
 
-
 }
 
 
@@ -204,6 +204,7 @@ StatStreamDensity <- ggplot2::ggproto(
 
     if (params$method %in% c('newWiggle', 'minimizedWiggle','themeRiver')) {
 
+      # need to make to return x, y, group
       per_panel <- lapply(
         split(data, .panels),
         compute_stacks,
@@ -213,15 +214,20 @@ StatStreamDensity <- ggplot2::ggproto(
 
     } else {
 
-    per_panel <- lapply(
-      split(data, .panels),
+      #returns x,y,group
+      per_panel <- lapply(
+        split(data, .panels),
         stack_densities,
         bw = params$bw,
         n_grid = params$n_grid,
         center_fun = params$center_fun,
         method = params$method
-    )
+      )
     }
+
+    per_panel <- lapply(seq_along(per_panel), function(x) {
+        data.frame(per_panel[[x]], PANEL = .panels[x])
+      })
 
     per_panel <- do.call(rbind, per_panel)
 
@@ -234,7 +240,8 @@ StatStreamDensity <- ggplot2::ggproto(
     per_panel$p_id <- 1:nrow(per_panel)
 
     out <- merge(chars, per_panel, all.x = FALSE)
-    #    out <- merge(chars, per_panel, by = c("group", "PANEL"), all.x = FALSE)
+    #out <- merge(chars, per_panel, by = c("group", "PANEL"), all.x = FALSE)
+
 
     out <- out[order(out$id, out$p_id), ]
 
@@ -244,13 +251,13 @@ StatStreamDensity <- ggplot2::ggproto(
 
     out
 
-
   },
 
   compute_group = function(data, scales) {
     data
   }
 )
+
 
 #' @title geom_stream
 #'
