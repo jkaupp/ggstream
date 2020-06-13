@@ -61,6 +61,12 @@ themeRiver <- function(values, timePoints, nStreams) {
 
   groups <- colnames(values)
 
+  if (is.null(groups)) {
+
+    groups <- "-1"
+
+  }
+
   y <- vector()
 
   for (iStream in 1:nStreams)
@@ -73,7 +79,7 @@ themeRiver <- function(values, timePoints, nStreams) {
 
   data.frame(x = rep(c(1:timePoints, timePoints:1), length(groups)),
          y = y_groups$values,
-         fill = y_groups$ind)
+         group = y_groups$ind)
 
 }
 
@@ -140,17 +146,17 @@ compute_stacks <- function(df, method = 'themeRiver') {
 
   others <- df[!names(df) %in% c("x", "y")]
 
-  sub_df <- df[names(df) %in% c("x", "y", "fill")]
+  sub_df <- df[names(df) %in% c("x", "y", "group")]
 
-  list <- split(sub_df, df$fill)
+  list <- split(sub_df, df$group)
 
   list <- lapply(list, function(x) merge(full_values, x, by = "x", all.x = TRUE))
 
   list <- lapply(list,  replace_values)
 
-  list <- lapply(list, function(x) setNames(x, c("x", unique(as.character(x$fill)), "fill")))
+  list <- lapply(list, function(x) setNames(x, c("x", unique(as.character(x$group)), "group")))
 
-  list <- lapply(list, function(x) x[names(x) != "fill"])
+  list <- lapply(list, function(x) x[names(x) != "group"])
 
   values <- as.matrix(Reduce(function(x, y) merge(x, y, by = "x"), list))
 
@@ -158,9 +164,20 @@ compute_stacks <- function(df, method = 'themeRiver') {
 
   values <- values[, -1]
 
-  timePoints <- dim(values)[1]
+  dims <- dim(values)
 
-  nStreams <- dim(values)[2]
+    if (is.null(dims[1])) {
+
+      timePoints <- length(values)
+      nStreams <- 1
+      values <- as.matrix(values)
+
+    } else {
+
+      timePoints <- dims[1]
+      nStreams <- dim(values)[2]
+
+    }
 
   out <- switch(method,
                 themeRiver = themeRiver(values, timePoints, nStreams),
