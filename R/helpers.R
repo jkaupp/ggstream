@@ -47,7 +47,7 @@ decimal_places <- function(x) {
 replace_values <- function(df) {
 
   df$y <- replace(df$y, is.na(df$y), 0)
-  df$fill <- replace(df$fill, is.na(df$fill), unique(na.omit(df$fill)))
+  df$group <- replace(df$group, is.na(df$group), unique(na.omit(df$group)))
 
   df
 
