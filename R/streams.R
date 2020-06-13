@@ -43,7 +43,7 @@ themeRiver <- function(values, timePoints, nStreams) {
 
   for (iStream in 1 : nStreams) {
 
-    tmpVals <- values[, iStream]
+    tmpVals <- predict(smooth.spline(values[, iStream]))$y
 
     if (iStream > 1) {
 
@@ -52,7 +52,8 @@ themeRiver <- function(values, timePoints, nStreams) {
       yy[, iStream * 2] <- yy[, iStream * 2 - 1] + tmpVals
 
     } else {
-      yy[, 1] <- -(1/2) * rowSums(values)
+
+      yy[, 1] <- -(1/2) * predict(smooth.spline(rowSums(values)))$y
 
       yy[, 2] <- yy[, iStream * 2 - 1] + tmpVals
     }
@@ -166,6 +167,13 @@ compute_stacks <- function(df, method = 'themeRiver') {
                 newWiggle = newWiggle(values, timePoints, nStreams),
                 minimizedWiggle = minimizedWiggle(values, timePoints, nStreams))
 
-  merge(out, unique(others))
+  out <- merge(out, unique(others))
+
+  out$x <- rep(c(xval, rev(xval)), length(unique(out$group)))
+
+  out <- out[names(out) %in% c("x", "y", "group")]
+
+  out
+
 
 }
