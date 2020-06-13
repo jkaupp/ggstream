@@ -204,7 +204,7 @@ StatStreamDensity <- ggplot2::ggproto(
 
     if (params$method %in% c('newWiggle', 'minimizedWiggle','themeRiver')) {
 
-      # need to make to return x, y, group
+
       per_panel <- lapply(
         split(data, .panels),
         compute_stacks,
