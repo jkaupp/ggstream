@@ -11,7 +11,7 @@
 # @return a data frame
 make_smooth_density <- function(df, bw = bw, n_grid = n_grid, min_x, max_x) {
 
-  group <- df$group[1]
+  group <- df$group[[1]]
 
   group_min_x <- min(df$x, na.rm = T)
 
@@ -204,13 +204,11 @@ StatStreamDensity <- ggplot2::ggproto(
 
     if (params$method %in% c('newWiggle', 'minimizedWiggle','themeRiver')) {
 
-
       per_panel <- lapply(
         split(data, .panels),
         compute_stacks,
         method = params$method
       )
-
 
     } else {
 
