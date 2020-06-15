@@ -160,9 +160,13 @@ compute_stacks <- function(df, method = 'themeRiver') {
 
   values <- as.matrix(Reduce(function(x, y) merge(x, y, by = "x"), list))
 
+  col_names <- colnames(values)
+
   xval <- values[, 1]
 
-  values <- values[, -1]
+  values <- as.matrix(values[, -1])
+
+  colnames(values) <- col_names[-1]
 
   dims <- dim(values)
 
@@ -187,8 +191,6 @@ compute_stacks <- function(df, method = 'themeRiver') {
   out <- merge(out, unique(others))
 
   out$x <- rep(c(xval, rev(xval)), length(unique(out$group)))
-
-  out <- out[names(out) %in% c("x", "y", "group")]
 
   out
 
