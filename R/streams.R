@@ -1,3 +1,50 @@
+base <- function(values, timePoints, nStreams) {
+
+  yy <- matrix(0, timePoints, (nStreams * 2))
+
+  for (iStream in 1 : nStreams) {
+
+    tmpVals <- predict(smooth.spline(values[, iStream]))$y
+
+    tmpVals[tmpVals < 0] <- 0
+
+    if (iStream > 1) {
+
+      yy[, iStream * 2 - 1] <- yy[, (iStream - 1) * 2]
+
+      yy[, iStream * 2] <- yy[, iStream * 2 - 1] + tmpVals
+
+    } else {
+
+        yy[, 2] <- tmpVals
+
+    }
+  }
+
+  groups <- colnames(values)
+
+  if (is.null(groups)) {
+
+    groups <- "-1"
+
+  }
+
+  y <- vector()
+
+  for (iStream in 1:nStreams)
+  {
+    y <- cbind(y, c(yy[, iStream * 2], rev(yy[, iStream * 2 - 1])))
+
+  }
+
+  y_groups <- stack(setNames(as.data.frame(y), groups))
+
+  data.frame(x = rep(c(1:timePoints, timePoints:1), length(groups)),
+             y = y_groups$values,
+             group = y_groups$ind)
+
+}
+
 
 newWiggle <- function(values, timePoints, nStreams) {
 
@@ -184,6 +231,7 @@ compute_stacks <- function(df, method = 'themeRiver') {
     }
 
   out <- switch(method,
+                base = base(values, timePoints, nStreams),
                 themeRiver = themeRiver(values, timePoints, nStreams),
                 newWiggle = newWiggle(values, timePoints, nStreams),
                 minimizedWiggle = minimizedWiggle(values, timePoints, nStreams))

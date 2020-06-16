@@ -202,7 +202,7 @@ StatStreamDensity <- ggplot2::ggproto(
 
     .panels <- unique(data$PANEL)
 
-    if (params$method %in% c('newWiggle', 'minimizedWiggle','themeRiver')) {
+    if (params$method %in% c('newWiggle', 'minimizedWiggle','themeRiver', 'base')) {
 
       per_panel <- lapply(
         split(data, .panels),
@@ -278,7 +278,7 @@ StatStreamDensity <- ggplot2::ggproto(
 #' @export
 geom_stream <- function(mapping = NULL, data = NULL, geom = "polygon",
                         position = "identity", show.legend = NA,
-                        inherit.aes = TRUE, na.rm = T, bw = 0.75, n_grid = 3000, method = c("loess", "density", "raw", "themeRiver", "newWiggle", "minimizedWiggle"), center_fun = NULL, ...) {
+                        inherit.aes = TRUE, na.rm = T, bw = 0.75, n_grid = 3000, method = c("loess", "density", "raw", "base", "themeRiver", "newWiggle", "minimizedWiggle"), center_fun = NULL, ...) {
   method <- match.arg(method)
   ggplot2::layer(
     stat = StatStreamDensity, data = data, mapping = mapping, geom = geom,
