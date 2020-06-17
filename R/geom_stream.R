@@ -204,6 +204,8 @@ StatStreamDensity <- ggplot2::ggproto(
 
     if (params$method %in% c('newWiggle', 'minimizedWiggle','themeRiver', 'base')) {
 
+      #saveRDS(data, "~/Desktop/per_panel.RDS")
+
       per_panel <- lapply(
         split(data, .panels),
         compute_stacks,
@@ -239,7 +241,6 @@ StatStreamDensity <- ggplot2::ggproto(
 
     out <- merge(chars, per_panel, all.x = FALSE)
     #out <- merge(chars, per_panel, by = c("group", "PANEL"), all.x = FALSE)
-
 
     out <- out[order(out$id, out$p_id), ]
 
