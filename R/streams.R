@@ -52,13 +52,13 @@ newWiggle <- function(values, timePoints, nStreams) {
                      decreasing = FALSE, index.return = TRUE)$ix
 
   idxStreams <- c(thin2large[seq(1, length(thin2large), 2)],
-                  thin2large[seq(length(thin2large), 2, -2)])
+                  thin2large[seq(2, length(thin2large), 2)])
 
   yy <- matrix(0, timePoints, (nStreams * 2))
 
   for (iStream in 1 : nStreams) {
 
-    tmpVals <- values[, idxStreams[iStream]]
+    tmpVals <- predict(smooth.spline(values[, idxStreams[iStream]]))$y
 
     if (iStream > 1) {
 
@@ -71,16 +71,35 @@ newWiggle <- function(values, timePoints, nStreams) {
       baseline <- rowSums(matrix((nStreams - 1 : nStreams - .5),
                                  nrow = timePoints, ncol = nStreams, byrow = TRUE) * values)
 
-      yy[, 1] <- - (baseline / nStreams)
+      yy[, 1] <- -predict(smooth.spline(baseline / nStreams))$y
 
       yy[, 2] <- yy[, iStream * 2 - 1] + tmpVals
 
     }
 
+  }
+
+  groups <- colnames(values)[idxStreams]
+
+  if (is.null(groups)) {
+
+    groups <- "-1"
 
   }
 
-  return(yy)
+  y <- vector()
+
+  for (iStream in 1:nStreams)
+  {
+    y <- cbind(y, c(yy[, iStream * 2], rev(yy[, iStream * 2 - 1])))
+
+  }
+
+  y_groups <- stack(setNames(as.data.frame(y), groups))
+
+  data.frame(x = rep(c(1:timePoints, timePoints:1), length(groups)),
+             y = y_groups$values,
+             group = y_groups$ind)
 
 }
 
@@ -136,7 +155,7 @@ minimizedWiggle <- function(values, timePoints, nStreams) {
 
   for (iStream in 1 : nStreams) {
 
-    tmpVals <- values[, iStream]
+    tmpVals <- predict(smooth.spline(values[, iStream]))$y
 
     if (iStream > 1) {
 
@@ -160,7 +179,7 @@ minimizedWiggle <- function(values, timePoints, nStreams) {
         baseline[ipoint] = baseline[ipoint] / nStreams
       }
 
-      yy[, 1] <- - baseline
+      yy[, 1] <- -predict(smooth.spline(baseline))$y
 
       yy[, 2] <- yy[, iStream * 2 - 1] + tmpVals
 
