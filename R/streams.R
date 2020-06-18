@@ -204,62 +204,105 @@ minimizedWiggle <- function(values, timePoints, nStreams) {
 }
 
 
-compute_stacks <- function(df, method = 'themeRiver') {
+# @title make_smooth_density
+#
+# Takes points and turns them into a density line.
+#
+# @param .df a data frame that must contain x and y
+# @param bw bandwidth of kernal density
+# @param n_grid number of x points that should be calculated. The higher the more smooth plot.
+# @param min_x minimum x value of all groups
+# @param max_x maximum x value of all groups
+#
+# @return a data frame
+make_smooth_density <- function(df, bw = bw, n_grid = n_grid, min_x, max_x) {
 
-  range_x <- range(df$x)
+  group <- df$group[[1]]
 
-  full_values <- data.frame(x = seq(range_x[1], range_x[2], 1/10^max(sapply(df$x, decimal_places))))
+  group_min_x <- min(df$x, na.rm = T)
 
-  others <- df[!names(df) %in% c("x", "y")]
+  group_max_x <- max(df$x, na.rm = T)
 
-  sub_df <- df[names(df) %in% c("x", "y", "group")]
+  range_dist <- max_x - min_x
 
-  list <- split(sub_df, df$group)
+  group_average_y <- mean(df$y, na.rm = TRUE)
 
-  list <- lapply(list, function(x) merge(full_values, x, by = "x", all.x = TRUE))
+  df <-  df[stats::complete.cases(df), ]
 
-  list <- lapply(list,  replace_values)
+  bwidth <- bw
 
-  list <- lapply(list, function(x) setNames(x, c("x", unique(as.character(x$group)), "group")))
+  w <- df$y / sum(df$y)
 
-  list <- lapply(list, function(x) x[names(x) != "group"])
+  m <- stats::density(df$x, weights = w, from = min_x - range_dist, to = max_x + range_dist, n = n_grid, bw = bwidth)
 
-  values <- as.matrix(Reduce(function(x, y) merge(x, y, by = "x"), list))
+  df <- data.frame(x = m$x,
+                   y = m$y)
 
-  col_names <- colnames(values)
+  df <- df[(df$x <= max_x & df$x >= min_x) | df$y > 1/10000 * max(df$y), ]
 
-  xval <- values[, 1]
+  # Un-normalize density so that height matches true data relative size
 
-  values <- as.matrix(values[, -1])
+  mulitplier <- abs(group_max_x - group_min_x) * group_average_y
 
-  colnames(values) <- col_names[-1]
+  df$y <- df$y * mulitplier
 
-  dims <- dim(values)
+  data.frame(x = df$x,
+             y = df$y,
+             group = group)
+}
 
-    if (is.null(dims[1])) {
 
-      timePoints <- length(values)
-      nStreams <- 1
-      values <- as.matrix(values)
+# @title make_connect_dots
+#
+# Returns n number of points from data that perfectly fits data.
+#
+# @param df a data frame that must contain x and y
+# @param n_grid number of x points that should be calculated. The higher the more smooth plot.
+# @param min_x minimum x value of all groups
+# @param max_x maximum x value of all groups
+#
+# @return a data frame
+#
+# @export
+make_connect_dots <- function(df, n_grid = n_grid, min_x, max_x, ...){
 
-    } else {
+  new_y <- sapply(split(df, list(df$x, df$group)), function(x) mean(x$y))
 
-      timePoints <- dims[1]
-      nStreams <- dim(values)[2]
+  df <- unique(df[c("x", "group")])
 
-    }
+  df <- df[order(df$x),]
 
-  out <- switch(method,
-                base = base(values, timePoints, nStreams),
-                themeRiver = themeRiver(values, timePoints, nStreams),
-                newWiggle = newWiggle(values, timePoints, nStreams),
-                minimizedWiggle = minimizedWiggle(values, timePoints, nStreams))
+  df$y <- new_y
 
-  out <- merge(out, unique(others))
+  group <- df$group[[1]]
 
-  out$x <- rep(c(xval, rev(xval)), length(unique(out$group)))
+  df <-  df[stats::complete.cases(df), ]
 
-  out
+  range_x <- seq(min_x, max_x, length.out = n_grid)
 
+  steps <- df$x[-1]
+
+  outside_local_range <- range_x[range_x < min(df$x) | range_x > max(df$x)]
+
+  inside_local_range <- range_x[range_x >= min(df$x) & range_x <= max(df$x)]
+
+  df <- data.frame(xlag = c(NA, utils::head(df$x, -1)),
+                   ylag = c(NA, utils::head(df$y, -1)),
+                   x = df$x,
+                   y = df$y)
+
+  df <-  df[stats::complete.cases(df), ]
+
+  inrange <- apply(df, 1, build_range, inside_range = inside_local_range)
+
+  inrange_out <- do.call(rbind, inrange)
+
+  out <- rbind(inrange_out,
+               data.frame(x = outside_local_range,
+                          y = rep(0, length(outside_local_range))))
+
+  out$group <- group
+
+  out[order(out$x),]
 
 }
