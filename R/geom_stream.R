@@ -8,26 +8,13 @@ StatStreamDensity <- ggplot2::ggproto(
 
     .panels <- unique(data$PANEL)
 
-    if (params$method %in% c('newWiggle', 'minimizedWiggle','themeRiver', 'base')) {
-
-      per_panel <- lapply(
-        split(data, .panels),
-        compute_stacks,
-        method = params$method
-      )
-
-    } else {
-
-      #returns x,y,group
-      per_panel <- lapply(
-        split(data, .panels),
-        stack_densities,
-        bw = params$bw,
-        n_grid = params$n_grid,
-        center_fun = params$center_fun,
-        method = params$method
-      )
-    }
+    per_panel <- lapply(
+          split(data, .panels),
+          stack_streams,
+          bw = params$bw,
+          n_grid = params$n_grid,
+          center_fun = params$center_fun,
+          method = params$method)
 
     per_panel <- lapply(seq_along(per_panel), function(x) {
         data.frame(per_panel[[x]], PANEL = .panels[x])
